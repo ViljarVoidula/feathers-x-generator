@@ -1,0 +1,9 @@
+import assert from 'assert';
+
+describe('"./src/services/{{item}}s/{{item}}.ts"', () => {
+  it('registered the service', async function () {
+    const service = this.app.service('{{path}}');
+
+    assert.ok(service, 'Registered the service');
+  });
+});

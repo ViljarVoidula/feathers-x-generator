@@ -1,0 +1,15 @@
+import { {{database}}Service } from '@feathersjs/{{lowerCase database}}';
+import type { MongoDBAdapterOptions } from '@feathersjs/{{lowerCase database}}';
+
+import type { Application } from '../../declarations';
+import type { {{properCase item}}, {{properCase item}}Data } from './{{item}}.schema';
+
+export class {{properCase item}}Service extends {{database}}Service<{{properCase item}}, {{properCase item}}Data> {}
+export const getOptions = (app: Application): {{database}}AdapterOptions => {
+  return {
+    paginate: app.get('paginate'),
+    //!code define_model start
+    Model: app.get('mongodbClient').then((db) => db.collection('{{item}}s'))
+    //!code define_model end
+  };
+};

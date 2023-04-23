@@ -1,0 +1,21 @@
+import { TSchema } from '@feathersjs/typebox/lib';
+import { {{camelCase item}}Schema  } from './{{item}}.schema';
+import { commonDataKeys } from '../../utils/schema-utils';
+
+//!code extended_graphql_schema start
+export const extendedSchema: TSchema = {
+  ...{{camelCase item}}Schema.schema
+};
+export const mutationConfiguration = {
+  create: {
+    keys: [...commonDataKeys({{camelCase item}}Schema.schema)],
+    schema: {{camelCase item}}Schema.dataSchema
+  },
+  patch: {
+    keys: [...commonDataKeys({{camelCase item}}Schema.schema)],
+    schema: {{camelCase item}}Schema.patchSchema
+  }
+  remove: true
+  // remove: true // remove mutation will just return the id of the removed item if enabled
+};
+//!code extended_graphql_schema end
