@@ -20,7 +20,9 @@ type FeathersQuery = {
   [key: string]: any | FeathersQuery;
 };
 
-const isFeathersQueryOperator = (value: any): value is FeathersQueryOperators => {
+const isFeathersQueryOperator = (
+  value: any
+): value is FeathersQueryOperators => {
   return typeof value === 'string' && value.startsWith('$');
 };
 
@@ -30,7 +32,11 @@ const isFeathersQuery = (value: any): value is FeathersQuery => {
   }
   for (const key in value) {
     const val = value[key];
-    if (typeof val === 'object' && !isFeathersQuery(val) && !isFeathersQueryOperator(key)) {
+    if (
+      typeof val === 'object' &&
+      !isFeathersQuery(val) &&
+      !isFeathersQueryOperator(key)
+    ) {
       return false;
     }
   }
@@ -44,13 +50,17 @@ export const FeathersQueryScalar = new GraphQLScalarType({
     if (isFeathersQuery(value)) {
       return value;
     }
-    throw new TypeError(`Value is not a valid FeathersJS query object: ${value}`);
+    throw new TypeError(
+      `Value is not a valid FeathersJS query object: ${value}`
+    );
   },
   parseValue(value: any) {
     if (isFeathersQuery(value)) {
       return value;
     }
-    throw new TypeError(`Value is not a valid FeathersJS query object: ${value}`);
+    throw new TypeError(
+      `Value is not a valid FeathersJS query object: ${value}`
+    );
   },
   parseLiteral(ast) {
     if (ast.kind === Kind.OBJECT) {
@@ -64,5 +74,5 @@ export const FeathersQueryScalar = new GraphQLScalarType({
     } else {
     }
     throw new TypeError(`Value is not a valid FeathersJS query object`);
-  }
+  },
 });

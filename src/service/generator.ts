@@ -14,7 +14,7 @@ class ServiceGenerator {
       {
         type: 'input',
         name: 'item',
-        message: 'How you call a single item handled by the service?'
+        message: 'How you call a single item handled by the service?',
       },
       {
         type: 'input',
@@ -22,18 +22,19 @@ class ServiceGenerator {
         message: 'What path should the service be registered on?',
         default: (answers: any) => {
           return answers.item + 's';
-        }
+        },
       },
       {
         name: 'authentication',
         type: 'confirm',
-        message: 'Does the service require authentication? (yes/no)'
+        message: 'Does the service require authentication? (yes/no)',
       },
       {
         name: 'commonProperties',
         type: 'list',
-        message: 'Do you want to use common properties(id, createdAt, updatedAt, etc)? (yes/no)',
-        choices: ['Yes', 'No']
+        message:
+          'Do you want to use common properties(id, createdAt, updatedAt, etc)? (yes/no)',
+        choices: ['Yes', 'No'],
       },
       {
         name: 'database',
@@ -41,14 +42,17 @@ class ServiceGenerator {
         message: 'What database adapter is the service using?',
         choices: ['MongoDB', 'Knex'],
         default: () => {
-          return packageJson.dependencies['@feathersjs/mongodb'] ? 'MongoDB' : 'Knex';
-        }
+          return packageJson.dependencies['@feathersjs/mongodb']
+            ? 'MongoDB'
+            : 'Knex';
+        },
       },
       {
         name: 'graphql',
         type: 'confirm',
-        message: 'Do you want to generate GraphQL schema for the service? (yes/no)'
-      }
+        message:
+          'Do you want to generate GraphQL schema for the service? (yes/no)',
+      },
     ];
   }
 
@@ -56,24 +60,24 @@ class ServiceGenerator {
     const actions = [
       {
         type: 'add',
-        path: '../../src/services/{{item}}s/{{item}}.schema.ts',
-        templateFile: 'templates/schema.ts.hbs'
+        path: '{{servicesPath}}/{{item}}s/{{item}}.schema.ts',
+        templateFile: 'templates/schema.ts.hbs',
       },
       {
         type: 'add',
-        path: '../../src/services/{{item}}s/{{item}}.class.ts',
-        templateFile: 'templates/class.ts.hbs'
+        path: '{{servicesPath}}/src/services/{{item}}s/{{item}}.class.ts',
+        templateFile: 'templates/class.ts.hbs',
       },
       {
         type: 'add',
-        path: '../../src/services/{{item}}s/{{item}}.ts',
-        templateFile: 'templates/service.ts.hbs'
+        path: '{{servicesPath}}/src/services/{{item}}s/{{item}}.ts',
+        templateFile: 'templates/service.ts.hbs',
       },
       {
         type: 'add',
-        path: '../../test/services/{{item}}s/{{item}}.test.ts',
-        templateFile: 'templates/test.ts.hbs'
-      }
+        path: '{{servicesPath}}/test/services/{{item}}s/{{item}}.test.ts',
+        templateFile: 'templates/test.ts.hbs',
+      },
     ];
 
     /**
@@ -81,43 +85,45 @@ class ServiceGenerator {
      */
 
     if (data.commonProperties === 'Yes') {
-      if (!fs.existsSync('./src/utils/schema-utils.ts')) {
-        actions.push({
-          type: 'add',
-          path: '../../src/utils/schema-utils.ts',
-          templateFile: 'templates/schema-utils.ts.hbs'
-        });
-      }
       actions.push({
-        type: 'append',
-        path: '../../src/services/{{item}}s/{{item}}.schema.ts',
+        type: 'add',
+        path: '{{servicesPath}}/utils/schema-utils.ts',
         //@ts-ignore
-        pattern: /\/\/!code:\s*default_imports\s+end/,
-        template: `import { commonDataKeys, commonSchemaProperties } from '../../utils/schema-utils';\n`
-      });
-      // if so, add the import to the file
-      actions.push({
-        type: 'modify',
-        path: '../../src/services/{{item}}s/{{item}}.schema.ts',
-        //@ts-ignore
-        pattern: /\/\/!code:\s*schema_properties\s+([\s\S]*?)\/\/!code:\s*schema_properties end/g,
-        template: `...commonSchemaProperties`
+        skipIfExists: true,
+        templateFile: 'templates/schema-utils.ts.hbs',
       });
 
       actions.push({
         type: 'append',
-        path: '../../src/services/{{item}}s/{{item}}.schema.ts',
+        path: '{{servicesPath}}/{{item}}s/{{item}}.schema.ts',
+        //@ts-ignore
+        pattern: /\/\/!code:\s*default_imports\s+end/,
+        template: `import { commonDataKeys, commonSchemaProperties } from '../../utils/schema-utils';\n`,
+      });
+      // if so, add the import to the file
+      actions.push({
+        type: 'modify',
+        path: '{{servicesPath}}/{{item}}s/{{item}}.schema.ts',
+        //@ts-ignore
+        pattern:
+          /\/\/!code:\s*schema_properties\s+([\s\S]*?)\/\/!code:\s*schema_properties end/g,
+        template: `...commonSchemaProperties`,
+      });
+
+      actions.push({
+        type: 'append',
+        path: '{{servicesPath}}/{{item}}s/{{item}}.schema.ts',
         //@ts-ignore
         pattern: /\/\/!code:\s+picking_keys/,
-        template: `            [...commonDataKeys(this.schema)],`
+        template: `            [...commonDataKeys(this.schema)],`,
       });
     } else {
       actions.push({
         type: 'append',
-        path: '../../src/services/{{item}}s/{{item}}.schema.ts',
+        path: '{{servicesPath}}/{{item}}s/{{item}}.schema.ts',
         //@ts-ignore
         pattern: /\/\/!code:\s+picking_keys/,
-        template: `            [],`
+        template: `            [],`,
       });
     }
 
@@ -127,43 +133,45 @@ class ServiceGenerator {
     if (data.database === 'MongoDB') {
       actions.push({
         type: 'modify',
-        path: '../../src/services/{{item}}s/{{item}}.class.ts',
+        path: '{{servicesPath}}/{{item}}s/{{item}}.class.ts',
         //@ts-ignore
-        pattern: /\/\/!code:define_model start\n([\s\S]*?)\/\/!code:define_model end/,
-        template: `Model: app.get('mongodbClient').then((db) => db.collection('{{item}}s'))`
+        pattern:
+          /\/\/!code:define_model start\n([\s\S]*?)\/\/!code:define_model end/,
+        template: `Model: app.get('mongodbClient').then((db) => db.collection('{{item}}s'))`,
       });
     }
     if (data.graphql) {
       actions.push({
         type: 'add',
-        path: '../../src/services/{{item}}s/{{item}}.graphql.ts',
-        templateFile: 'templates/graphql.ts.hbs'
+        path: '{{servicesPath}}/{{item}}s/{{item}}.graphql.ts',
+        templateFile: 'templates/graphql.ts.hbs',
       });
     }
 
-    if (packageJson.feathers.database === 'postgresql' && data.database === 'Knex') {
+    if (data.database === 'Knex') {
       actions.push({
         type: 'modify',
-        path: '../../src/services/{{item}}s/{{item}}.class.ts',
+        path: '{{servicesPath}}/{{item}}s/{{item}}.class.ts',
         //@ts-ignore
-        pattern: /\/\/!code:define_model start\n([\s\S]*?)\/\/!code:define_model end/,
-        template: `Model: app.get('postgresClient'),`
+        pattern:
+          /\/\/!code:define_model start\n([\s\S]*?)\/\/!code:define_model end/,
+        template: `Model: app.get('postgresClient'),`,
       });
     }
 
     actions.push({
       type: 'append',
-      path: '../../src/services/index.ts',
+      path: '{{servicesPath}}/index.ts',
       //@ts-ignore
       pattern: /import.*service.*;/g,
-      template: `import { {{item}}s } from './{{item}}s/{{item}}';\n`
+      template: `import { {{item}}s } from './{{item}}s/{{item}}';\n`,
     });
     actions.push({
       type: 'append',
-      path: '../../src/services/index.ts',
+      path: '{{servicesPath}}/index.ts',
       //@ts-ignore
       pattern: /\/\/!code:\s+generated_services start/g,
-      template: `  app.configure({{item}}s);`
+      template: `  app.configure({{item}}s);`,
     });
 
     return actions;

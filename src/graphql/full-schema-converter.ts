@@ -20,19 +20,35 @@ import {
   parse,
   printSchema,
   Kind,
-  DocumentNode
+  DocumentNode,
 } from 'graphql';
 import pluralize from 'pluralize';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import camelcase from 'camelcase';
-type JsonSchemaType = 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array' | 'null' | 'undefined' | 'any' | 'ID';
-  //@ts-ignore
-export function jsonSchemaTypeToGraphQLType(jsonType: JsonSchemaType | JsonSchemaType[], isRequired = false) {
+type JsonSchemaType =
+  | 'string'
+  | 'number'
+  | 'integer'
+  | 'boolean'
+  | 'object'
+  | 'array'
+  | 'null'
+  | 'undefined'
+  | 'any'
+  | 'ID';
+//@ts-ignore
+export function jsonSchemaTypeToGraphQLType(
+  jsonType: JsonSchemaType | JsonSchemaType[],
+  isRequired = false
+) {
   let graphQLType;
   if (Array.isArray(jsonType)) {
     // For union types, we return GraphQLString as a fallback type
     //@ts-ignore
-    graphQLType = jsonType.reduce((acc, curr) => acc || jsonSchemaTypeToGraphQLType(curr), null);
+    graphQLType = jsonType.reduce(
+      (acc, curr) => acc || jsonSchemaTypeToGraphQLType(curr),
+      null
+    );
   } else {
     switch (jsonType) {
       case 'string':
@@ -75,7 +91,10 @@ export function jsonSchemaTypeToGraphQLType(jsonType: JsonSchemaType | JsonSchem
 
   return graphQLType;
 }
-function fieldsToInputType(fields: GraphQLInputFieldConfigMap, name: string): GraphQLInputObjectType {
+function fieldsToInputType(
+  fields: GraphQLInputFieldConfigMap,
+  name: string
+): GraphQLInputObjectType {
   const inputFields: GraphQLInputFieldConfigMap = {};
   const inputTypeCache: Map<GraphQLInputType, GraphQLInputType> = new Map();
 
@@ -107,13 +126,13 @@ function fieldsToInputType(fields: GraphQLInputFieldConfigMap, name: string): Gr
       const fieldType = field.type;
       const inputFieldType = fieldTypeToInputType(fieldType);
       inputFields[fieldName] = {
-        type: inputFieldType
+        type: inputFieldType,
       };
     }
   }
   return new GraphQLInputObjectType({
     name,
-    fields: inputFields
+    fields: inputFields,
   });
 }
 
@@ -126,7 +145,10 @@ function sortSchema(schema: GraphQLSchema) {
 
   // Iterate over the document AST and separate type definitions and operations
   for (const definition of ast.definitions) {
-    if (definition.kind === Kind.OPERATION_DEFINITION || definition.kind === Kind.FRAGMENT_DEFINITION) {
+    if (
+      definition.kind === Kind.OPERATION_DEFINITION ||
+      definition.kind === Kind.FRAGMENT_DEFINITION
+    ) {
       operations.push(definition);
     }
     if (definition.kind === Kind.SCALAR_TYPE_DEFINITION) {
@@ -145,7 +167,7 @@ function sortSchema(schema: GraphQLSchema) {
   // Build a new document AST with the types and operations separated
   const newAst: DocumentNode = {
     kind: Kind.DOCUMENT,
-    definitions: [...operations, ...scalars, ...types]
+    definitions: [...operations, ...scalars, ...types],
   };
 
   // Build a new schema using the modified document AST
@@ -154,7 +176,7 @@ function sortSchema(schema: GraphQLSchema) {
   // Return the sorted schema as a string
   return newSchema;
 }
-  //@ts-ignore
+//@ts-ignore
 export function buildMutationType(schemas, querySchema) {
   // go over the schemas and filter the ones that have a mutationConfiguration
   let inputs = [];
@@ -166,15 +188,18 @@ export function buildMutationType(schemas, querySchema) {
         const typeMap = querySchema.getTypeMap();
         const field = method + schemas[key].extendedSchema.$id;
         const extractedReturnType = field.replace(/create|patch|remove/, '');
-        const typeFields = typeMap[pluralize.singular(extractedReturnType)].getFields();
-   
+        const typeFields =
+          typeMap[pluralize.singular(extractedReturnType)].getFields();
+
         const fields = /remove|patch/.test(field)
           ? {
-              id: { type: new GraphQLNonNull(GraphQLID) }
+              id: { type: new GraphQLNonNull(GraphQLID) },
             }
           : pick(keys, { ...typeFields });
         //@ts-ignore
-        inputs.push(fieldsToInputType(fields, toUpperCamelCase(pluralize.singular(field))));
+        inputs.push(
+          fieldsToInputType(fields, toUpperCamelCase(pluralize.singular(field)))
+        );
       }
     }
   }
@@ -185,40 +210,39 @@ export function buildMutationType(schemas, querySchema) {
     const field = input.name;
     const extractedReturnType = field.replace(/Create|Patch|Remove/, '');
     const type = typeMap[pluralize.singular(extractedReturnType)];
-    let args = {}
-    debugger
-    if(field.match(/Create/)){
+    let args = {};
+    debugger;
+    if (field.match(/Create/)) {
       args = {
-        data: { type: new GraphQLNonNull(input) }
-      }
-    }else if(field.match(/Patch/)){
+        data: { type: new GraphQLNonNull(input) },
+      };
+    } else if (field.match(/Patch/)) {
       args = {
         id: { type: new GraphQLNonNull(GraphQLID) },
         data: { type: new GraphQLNonNull(input) },
-      
-      }
-    }else if(field.match(/Remove/)){
+      };
+    } else if (field.match(/Remove/)) {
       args = {
-        id: { type: new GraphQLNonNull(GraphQLID) }
-      }
+        id: { type: new GraphQLNonNull(GraphQLID) },
+      };
     }
 
     return {
       [camelcase(pluralize.singular(field))]: {
         type,
-        args
-      }
+        args,
+      },
     };
   });
- 
+
   return sortSchema(
     new GraphQLSchema({
       query: querySchema.getQueryType(),
       mutation: new GraphQLObjectType({
         name: 'Mutation',
-        fields: mutationFields.reduce((acc, curr) => ({ ...acc, ...curr }), {})
+        fields: mutationFields.reduce((acc, curr) => ({ ...acc, ...curr }), {}),
       }),
-      types: [...inputs]
+      types: [...inputs],
     })
   );
 }

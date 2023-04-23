@@ -10,7 +10,7 @@ export function graphqlSafeEnumKey(value: string): string {
       '<': 'LT',
       '<=': 'LTE',
       '>=': 'GTE',
-      '>': 'GT'
+      '>': 'GT',
     };
     return Object.keys(comparators).includes(s) ? comparators[s] : s;
   };

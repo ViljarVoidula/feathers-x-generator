@@ -26,7 +26,10 @@ import { FeathersQueryScalar } from './feathersQuery.scalar';
  * a Map of types and returns Query, Mutation (optional), and Subscription (optional)
  * blocks. Each block consists of a hash of `GraphQLFieldConfig`s.
  */
-export default function convert({ jsonSchema, entryPoints = DEFAULT_ENTRY_POINTS }: ConvertParams): GraphQLSchema {
+export default function convert({
+  jsonSchema,
+  entryPoints = DEFAULT_ENTRY_POINTS,
+}: ConvertParams): GraphQLSchema {
   // coerce input to array of schema objects
   const schemaArray: JSONSchema7[] = toArray(jsonSchema).map(toSchema);
 
@@ -34,7 +37,7 @@ export default function convert({ jsonSchema, entryPoints = DEFAULT_ENTRY_POINTS
 
   return new GraphQLSchema({
     ...types,
-    ...entryPoints(types)
+    ...entryPoints(types),
   });
 }
 
