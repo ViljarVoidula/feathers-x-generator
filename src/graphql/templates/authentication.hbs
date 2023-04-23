@@ -1,0 +1,45 @@
+import { HookContext } from '@feathersjs/feathers';
+import { Koa } from '@feathersjs/koa/lib';
+import { GraphQLResolveInfo } from 'graphql';
+
+export const jwtAuthNDef = `
+    type AuthNUser {
+        email: String!
+        id: ID!
+    }
+
+    type AuthNPayload {
+        iat: Int!
+        exp: Int!
+        aud: String!
+        sub: String!
+        jti: String!
+    }
+
+    type AuthNData {
+        strategy: String!
+        payload: AuthNPayload!
+    }
+
+    type AuthNResult {
+        accessToken: String!
+        authentication: AuthNData!
+        user: AuthNUser!
+    }
+
+    type Mutation {
+        authenticate(email: String!, password: String!, strategy: String!): AuthNResult!
+    }
+`
+
+export const authNResolver = {
+    Mutation: {
+        authenticate: async (_parent: any, args: any, context: HookContext & Koa.Context, info: GraphQLResolveInfo) => {
+            const { feathers } = context;
+            const { email, password, strategy } = args;          
+            const data = await context.app.service('authentication').create({ email, password, strategy, ...feathers});
+          
+            return data
+        },
+    }
+}

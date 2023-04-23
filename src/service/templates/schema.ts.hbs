@@ -1,0 +1,76 @@
+ //!code: default_imports start
+import { resolve } from '@feathersjs/schema';
+import { BadRequest } from '@feathersjs/errors/lib';
+import { TObject, Type } from '@feathersjs/typebox';
+
+import { HookContext } from '../../declarations';
+import { dataValidator } from '../../validators';
+
+import type { Static } from '@feathersjs/typebox';
+//!code: default_imports end
+
+class ServiceSchema {
+    schema: TObject;
+
+    constructor(){
+        this.schema = Type.Object(
+            // Write your base schema here
+            {
+                //!code: schema_properties start
+
+                //!code: schema_properties end
+            },
+            { $id: '{{properCase item}}', additionalProperties: false }
+        )
+    }
+
+    get dataSchema(){
+        return Type.Pick(
+            this.schema,
+            //!code: picking_keys
+            {
+              $id: '{{properCase item}}Data'
+            }
+          )
+    }
+
+    get patchSchema(){
+        // Write your patch schema here - this used mostly for patch method , probably not needed often
+        return Type.Partial(this.schema,{
+            $id: '{{properCase item}}Patch'
+          })
+    }
+
+    get resolver(){
+       return resolve<typeof this.schema, HookContext>({
+        // if you have any custom resolver, write it here, for example populate or calculate a field on typebox schema
+       })
+    }
+
+    get validateInput() {
+        return async (context: HookContext) => {
+            const { data } = context;
+            if(!['create', 'patch'].includes(context.method)) throw new Error('Invalid method for validator');  
+            
+            const schemasMap = {
+                create: this.dataSchema,
+                patch:  this.patchSchema
+            };
+            const validator = dataValidator.compile(schemasMap[context.method as 'create' | 'patch']);
+            const valid = validator(data);
+    
+            if(!valid){
+                throw new BadRequest('Invalid input', { errors: validator.errors });
+            }
+            return context
+        }
+    }
+}
+
+
+
+export const {{camelCase item}}Schema = new ServiceSchema();
+
+export type {{properCase item}} = Static<typeof {{camelCase item}}Schema.schema>;
+export type {{properCase item}}Patch = Static<typeof {{camelCase item}}Schema.patchSchema>;
+export type {{properCase item}}Data = Static<typeof {{camelCase item}}Schema.dataSchema>;

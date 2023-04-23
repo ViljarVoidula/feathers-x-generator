@@ -1,0 +1,28 @@
+{
+  "ts-node": {
+    "esm": true,
+    "pretty": true,
+    "transpileOnly": true,
+    "files": true,
+    "compilerOptions": {
+      "module": "CommonJS",
+      "esModuleInterop": true
+    }
+  },
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "incremental": true,
+    "target": "es5",
+    "moduleResolution": "node",
+    "declaration": true,
+    "outDir": "dist"
+  },
+  "allowSyntheticDefaultImports": true,
+  "include": [
+    "./**/*.ts",
+    "src/graphql/templates/**/*.hbs",
+    "/home/viljar/Projects/generators/src/service/templates/**/*.hbs"
+  ],
+  "exclude": ["node_modules", "graphql", "dist", "assets"]
+}

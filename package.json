@@ -1,0 +1,32 @@
+{
+  "name": "feathers-x-generator",
+  "version": "1.0.0",
+  "description": "Custom generators for Feathers Dove and Typebox",
+  "engines": "node >= 18.0.0",
+  "author": "Viljar Võidula",
+  "main": "dist/plopfile.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.plop.json",
+    "plop": "ts-node --project=./tsconfig.plop.json node_modules/.bin/plop --plopfile=src/plopfile.ts"
+  },
+  "dependencies": {
+    "ajv": "8.12.0",
+    "camelcase": "6.3.0",
+    "graphql": "16.6.0",
+    "graphql-type-json": "0.3.2",
+    "json-schema": "0.4.0",
+    "plop": "3.1.2",
+    "pluralize": "8.0.0"
+  },
+  "devDependencies": {
+    "ts-node": "10.9.1",
+    "@types/json-schema": "7.0.11",
+    "@feathersjs/typebox": "5.0.4",
+    "@types/node": "18.15.13",
+    "@types/pluralize": "0.0.29",
+    "tsconfig-paths": "4.2.0",
+    "typescript": "5.0.4"
+  }
+}
