@@ -1,6 +1,14 @@
 import { cwd } from 'process';
 import { getFullSchema } from './schema-loader';
 import path from 'path';
+import pluralize from 'pluralize';
+
+const groupBy = key => array =>
+  array.reduce((objectsByKeyValue, obj) => {
+    const value = obj[key];
+    objectsByKeyValue[value] = (objectsByKeyValue[value] || []).concat(obj);
+    return objectsByKeyValue;
+  }, {});
 
 let schemaResult;
 
@@ -15,18 +23,19 @@ export const rootResolver = {
     },
     Mutation: {
         //!code graphql_mutation_resolvers end
-    }
+    },
+        //!code graphql_type_resolvers end
 }
 `;
 const buildQueryResolver = (resolverName: string, service: string) => {
   const page = resolverName.match(/Page$/);
   let innerTemplate = page
-    ? `const { query } = args;\n            const data = await context.app.service('${service}').find({ query, ...feathers});
+    ? `const { query } = args;\n            const { $limit = 50, $skip = 0 } = query;\n            const data = await context.app.service('${service}').find({ query: { ...query, $limit, $skip }, ...feathers});
   `
     : `const { id } = args;\n            const data = await context.app.service('${service}').get(id, feathers);
   `;
   return `
-        ${resolverName}: async (_parent: any, args: any, context: HookContext & Koa.Context, info: GraphQLResolveInfo) => {
+        ${resolverName}: async (_parent: any, args: any, context: HookContext & Koa.Context, _info: GraphQLResolveInfo) => {
             const { feathers } = context;
             ${innerTemplate}  
             return data;
@@ -60,6 +69,20 @@ class ServiceGenerator {
     return [
       {
         type: 'confirm',
+        prefix: `
+        _____________________________________________________________
+       / To run the Graphql generator, make sure you have the         \\
+       | .feathersx.config.json file.                                  |
+       |                                                               |
+       | NB: ".graphql.ts" files need to export valid schemas and      |
+       \\ references in order to build the GraphQL service!             /
+        -------------------------------------------------------------
+               \\   ^__^
+                \\  (oo)\\_______
+                   (__)\\       )\\/\\
+                       ||----w |
+                       ||     ||
+       `,
         name: 'generateResolvers',
         message:
           'Do you want to generate GraphQL resolvers for the services? (yes/no)',
@@ -68,6 +91,8 @@ class ServiceGenerator {
   }
 
   actions(data: any) {
+
+    if (!data.generateResolvers) return []
     function buildServiceCall(method: string, service: string) {
       let call = `const result = await context.app.service('${service.toLowerCase()}').${method}`;
       if (method === 'create') {
@@ -99,16 +124,32 @@ class ServiceGenerator {
 
       return args;
     }
-    // console.log(schemaResult.mutationResolverGeneratorEntries);
+    function buildResolverArgs(method: string) {
+      let args = '';
+      if (method === 'create') {
+        args = `data: any`;
+      } else if (method === 'patch') {
+        args = `id: string, data: any`;
+      } else if (method === 'remove') {
+        args = `id: string`;
+      } else if (method === 'find') {
+        args = `query: any`;
+      } else if (method === 'get') {
+        args = `id: string`;
+      }
+
+      return args;
+    }
+
     const mutations = schemaResult.mutationResolverGeneratorEntries.map(
       (entry) => {
         const method = entry.match(/^[^A-Z]*/)[0];
         const service = `${entry.match(/[A-Z].*/)[0]}s`;
         return {
           type: 'modify',
-          path: '{{outputPath}}/resolvers.ts',
+          path: '{{graphQLOutputPath}}/resolvers.ts',
           transform: (fileContents) => {
-            const resolver = `\n        ${entry}: async (_parent: any, args: { id?: string, data: any }, context: HookContext & Koa.Context, info: GraphQLResolveInfo) => {\n            const { feathers } = context;\n            ${buildArgs(
+            const resolver = `\n        ${entry}: async (_parent: any, args: { ${buildResolverArgs(method)} }, context: HookContext & Koa.Context, _info: GraphQLResolveInfo) => {\n            const { feathers } = context;\n            ${buildArgs(
               method
             )}\n            ${buildServiceCall(
               method,
@@ -129,7 +170,7 @@ class ServiceGenerator {
       const service = `${entry.match(/[a-z].*/)[0]}`;
       return {
         type: 'modify',
-        path: '{{outputPath}}/resolvers.ts',
+        path: '{{graphQLOutputPath}}/resolvers.ts',
         transform: (fileContents) => {
           const resolver = buildQueryResolver(entry, service);
           const regex = new RegExp(
@@ -141,34 +182,73 @@ class ServiceGenerator {
         },
       };
     });
+    const groupByRootId = groupBy('root_id')
+    const referenceRoots = groupByRootId(schemaResult.typeReferenceEntries)
+    const referenceRootTypes = Object.keys(referenceRoots).map((entry) => {
+      return {
+        type: 'append',
+        path: '{{graphQLOutputPath}}/resolvers.ts',
+        pattern: `//!code graphql_type_resolvers end`,
+        template: `    ${entry}: {\n        //!code graphql_${entry}_resolvers end\n    },\n`
+
+      }
+    })
+
+    const referencFieldResolvers = Object.entries(schemaResult.typeReferenceEntries).map(([key, value]: any) => {
+      const field = value.type === 'array' ? value.path.match(/(?<=\.)[^.\n]*(?=\.|^)/) : value.parent_key;
+      return {
+        type: 'append',
+        path: '{{graphQLOutputPath}}/resolvers.ts',
+        pattern: `//!code graphql_${value.root_id}_resolvers end`,
+        template: `
+        ${field}: async (parent: any, args: any, context: HookContext & Koa.Context, _info: GraphQLResolveInfo) => {
+          const { feathers } = context;
+          ${value.path.match(/items/) ? `const { ${value.key_field} = [] } = parent;
+          const { query } = args;
+          const { $limit = 50, $skip = 0 } = query;
+          const data = await context.app.service('${pluralize(value.key).toLowerCase()}').find({ query: {...query, ${value.key_field}: { $in: ${value.key_field} }, $limit, $skip }, ...feathers});
+
+          return data;`: `const { ${value.key_field} } = parent;
+          const data = await context.app.service('${pluralize(value.key).toLowerCase()}').get(${value.key_field}, ...feathers);
+
+          return data;
+          `}
+        },`
+      }
+    })
+
+
     return [
       {
         type: 'add',
-        path: '{{outputPath}}/authentication/index.ts',
+        path: '{{graphQLOutputPath}}/authentication/index.ts',
         skipIfExists: true,
         templateFile: 'graphql/templates/authentication.hbs',
       },
       {
         type: 'add',
-        path: '{{outputPath}}/index.ts',
+        path: '{{graphQLOutputPath}}/index.ts',
         skipIfExists: true,
         templateFile: 'graphql/templates/index.hbs',
       },
       {
         type: 'add',
-        path: '{{outputPath}}/resolvers.ts',
+        path: '{{graphQLOutputPath}}/resolvers.ts',
         force: true,
         template: freshRoot,
       },
 
       {
         type: 'add',
-        path: '{{outputPath}}/typeDef.ts',
+        path: '{{graphQLOutputPath}}/typeDef.ts',
         template: `\nexport const rootTypeDef =\`#graphql\n${schemaResult.fullSchema}\``,
         force: true,
       },
       ...mutations,
       ...queries,
+      ...referenceRootTypes,
+      ...referencFieldResolvers
+
     ];
   }
 }

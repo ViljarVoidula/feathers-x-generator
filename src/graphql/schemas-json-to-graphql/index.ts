@@ -4,7 +4,7 @@ import { JSONSchema7 } from 'json-schema';
 import { DEFAULT_ENTRY_POINTS } from './helpers';
 import { schemaReducer } from './schemaReducer';
 import { ConvertParams, GraphQLTypeMap } from '../../../@types';
-import { FeathersQueryScalar } from './feathersQuery.scalar';
+
 /**
  * @param jsonSchema - An individual schema or an array of schemas, provided
  * either as Javascript objects or as JSON text.
@@ -53,4 +53,3 @@ function toSchema(x: JSONSchema7 | string): JSONSchema7 {
     : JSON.parse(x); // string -> object
 }
 
-export const FeathersQuery = FeathersQueryScalar;

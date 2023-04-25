@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { NodePlopAPI } from 'plop';
-import ServiceGenerator from './service/generator';
+import ServiceGenerator from './services/generator';
 import GraphqQLGenerator from './graphql/generator';
 
 const searchForConfig = (dir: string): any | undefined => {
@@ -26,18 +26,31 @@ const config = searchForConfig(process.cwd());
 const graphqQLGenerator = new GraphqQLGenerator(config);
 
 module.exports = function Plopfile(plop: NodePlopAPI) {
-  plop.setHelper('outputPath', () => {
-    let outputPath = path.normalize(
-      process.cwd() + '/' + config.output_path.replace('.', '')
+  plop.setHelper('graphQLOutputPath', () => {
+    let graphQLOutputPath = path.normalize(
+      process.cwd() + '/' + config.graphql_output_path.replace('.', '')
     );
-    return outputPath;
+    return graphQLOutputPath;
   });
   plop.setHelper('servicesPath', () => {
     let servicesPath = path.normalize(
-      process.cwd() + '/' + config.services_path.replace('.', '')
+      process.cwd() + '/' + config.services_output_path.replace('.', '')
     );
     return servicesPath;
   });
+  plop.setHelper('testsOuputPath', () => {
+    let testsOuputPath = path.normalize(
+      process.cwd() + '/' + config.tests_output_path.replace('.', '')
+    );
+    return testsOuputPath;
+  });
+  plop.setHelper('appRootPath', () => {
+    let appRootPath = path.normalize(
+      process.cwd() + '/' + config.app_root_path.replace('.', '')
+    );
+    return appRootPath;
+  });
+
   plop.setGenerator(ServiceGenerator.name, {
     description: ServiceGenerator.description,
     prompts: ServiceGenerator.prompts,

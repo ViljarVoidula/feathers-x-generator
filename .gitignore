@@ -133,3 +133,5 @@ dist
 assets
 **x.config.json
 test-output
+validators.ts
+declarations.ts

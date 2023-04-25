@@ -61,22 +61,44 @@ class ServiceGenerator {
       {
         type: 'add',
         path: '{{servicesPath}}/{{item}}s/{{item}}.schema.ts',
-        templateFile: 'templates/schema.ts.hbs',
+        skipIfExists: true,
+        templateFile: 'services/templates/schema.ts.hbs',
       },
       {
         type: 'add',
-        path: '{{servicesPath}}/src/services/{{item}}s/{{item}}.class.ts',
-        templateFile: 'templates/class.ts.hbs',
+        path: '{{servicesPath}}/{{item}}s/{{item}}.class.ts',
+        skipIfExists: true,
+        templateFile: 'services/templates/class.ts.hbs',
       },
       {
         type: 'add',
-        path: '{{servicesPath}}/src/services/{{item}}s/{{item}}.ts',
-        templateFile: 'templates/service.ts.hbs',
+        path: '{{servicesPath}}/{{item}}s/{{item}}.ts',
+        skipIfExists: true,
+        templateFile: 'services/templates/service.ts.hbs',
       },
       {
         type: 'add',
-        path: '{{servicesPath}}/test/services/{{item}}s/{{item}}.test.ts',
-        templateFile: 'templates/test.ts.hbs',
+        path: '{{testsOuputPath}}/services/{{item}}s/{{item}}.test.ts',
+        skipIfExists: true,
+        templateFile: 'services/templates/test.ts.hbs',
+      },
+      {
+        type: 'add',
+        path: '{{appRootPath}}/validators.ts',
+        skipIfExists: true,
+        templateFile: 'services/templates/validators.ts.hbs',
+      },
+      {
+        type: 'add',
+        path: '{{appRootPath}}/declarations.ts',
+        skipIfExists: true,
+        templateFile: 'services/templates/declarations.ts.hbs',
+      },
+      {
+        type: 'add',
+        path: '{{servicesPath}}/index.ts',
+        skipIfExists: true,
+        templateFile: 'services/templates/index.ts.hbs',
       },
     ];
 
@@ -87,15 +109,16 @@ class ServiceGenerator {
     if (data.commonProperties === 'Yes') {
       actions.push({
         type: 'add',
-        path: '{{servicesPath}}/utils/schema-utils.ts',
+        path: '{{servicesPath}}/../utils/schema-utils.ts',
         //@ts-ignore
         skipIfExists: true,
-        templateFile: 'templates/schema-utils.ts.hbs',
+        templateFile: 'services/templates/schema-utils.ts.hbs',
       });
 
       actions.push({
         type: 'append',
         path: '{{servicesPath}}/{{item}}s/{{item}}.schema.ts',
+        skipIfExists: true,
         //@ts-ignore
         pattern: /\/\/!code:\s*default_imports\s+end/,
         template: `import { commonDataKeys, commonSchemaProperties } from '../../utils/schema-utils';\n`,
@@ -104,6 +127,7 @@ class ServiceGenerator {
       actions.push({
         type: 'modify',
         path: '{{servicesPath}}/{{item}}s/{{item}}.schema.ts',
+        skipIfExists: true,
         //@ts-ignore
         pattern:
           /\/\/!code:\s*schema_properties\s+([\s\S]*?)\/\/!code:\s*schema_properties end/g,
@@ -113,6 +137,7 @@ class ServiceGenerator {
       actions.push({
         type: 'append',
         path: '{{servicesPath}}/{{item}}s/{{item}}.schema.ts',
+        skipIfExists: true,
         //@ts-ignore
         pattern: /\/\/!code:\s+picking_keys/,
         template: `            [...commonDataKeys(this.schema)],`,
@@ -143,8 +168,9 @@ class ServiceGenerator {
     if (data.graphql) {
       actions.push({
         type: 'add',
+        skipIfExists: true,
         path: '{{servicesPath}}/{{item}}s/{{item}}.graphql.ts',
-        templateFile: 'templates/graphql.ts.hbs',
+        templateFile: 'services/templates/graphql.ts.hbs',
       });
     }
 

@@ -41,18 +41,20 @@ export function schemaReducer(knownTypes: GraphQLTypeMap, schema: JSONSchema7) {
     knownTypes[definedTypeName] = buildType(
       definedTypeName,
       definedSchema,
-      knownTypes
+      knownTypes,
+      schema
     );
   }
 
-  knownTypes[typeName] = buildType(typeName, schema, knownTypes);
+  knownTypes[typeName] = buildType(typeName, schema, knownTypes, schema);
   return knownTypes;
 }
 
 function buildType(
   propName: string,
   schema: JSONSchema7,
-  knownTypes: GraphQLTypeMap
+  knownTypes: GraphQLTypeMap,
+  rootSchema?: JSONSchema7
 ): GraphQLType {
   const name = toUpperCamelCase(propName);
 
@@ -84,24 +86,31 @@ function buildType(
     const fields = () =>
       !isEmpty(schema.properties)
         ? mapValues(
-            //@ts-ignore
-            schema?.properties ?? {},
-            (prop: JSONSchema7, fieldName: string) => {
-              const qualifiedFieldName = `${name}.${fieldName}`;
-              const type = buildType(
-                qualifiedFieldName,
-                prop,
-                knownTypes
-              ) as GraphQLObjectType;
-              const isRequired = schema?.required?.includes(fieldName);
-              return {
-                type: isRequired ? new GraphQLNonNull(type) : type,
-                description: buildDescription(prop),
-              };
-            }
-          )
+          //@ts-ignore
+          schema?.properties ?? {},
+          (prop: JSONSchema7, fieldName: string) => {
+            const qualifiedFieldName = `${name}.${fieldName}`;
+            const type = buildType(
+              qualifiedFieldName,
+              prop,
+              knownTypes
+            ) as GraphQLObjectType;
+            const isRequired = schema?.required?.includes(fieldName);
+
+            return {
+              type: isRequired ? new GraphQLNonNull(type) : type,
+              //@ts-expect-error
+              ...(prop.items?.$ref ? {
+                args: {
+                  query: { type: GraphQLJSONObject },
+                }
+              } : {}),
+              description: buildDescription(prop),
+            };
+          }
+        )
         : // GraphQL doesn't allow types with no fields, so put a placeholder
-          { _empty: { type: GraphQLString } };
+        { _empty: { type: GraphQLString } };
 
     return new GraphQLObjectType({ name, description, fields });
   }

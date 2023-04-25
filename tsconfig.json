@@ -8,7 +8,7 @@
   },
   "compilerOptions": {
     "skipLibCheck": true,
-    "target": "ES5",
+    "target": "es2020",
     "module": "NodeNext",
     "moduleResolution": "node",
     "outDir": "./lib",
@@ -23,10 +23,6 @@
     "sourceMap": true
   },
   "allowSyntheticDefaultImports": true,
-  "include": [
-    "src",
-    "src/graphql/templates/**/*.hbs",
-    "/home/viljar/Projects/generators/src/service/templates/**/*.hbs"
-  ],
-  "exclude": ["node_modules", "graphql", "dist", "assets"]
+  "include": ["src"],
+  "exclude": ["node_modules", "graphql", "dist", "assets", "test-output"]
 }

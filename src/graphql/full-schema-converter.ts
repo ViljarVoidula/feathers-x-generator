@@ -193,11 +193,11 @@ export function buildMutationType(schemas, querySchema) {
 
         const fields = /remove|patch/.test(field)
           ? {
-              id: { type: new GraphQLNonNull(GraphQLID) },
-            }
+            id: { type: new GraphQLNonNull(GraphQLID) },
+          }
           : pick(keys, { ...typeFields });
-        //@ts-ignore
         inputs.push(
+          //@ts-ignore
           fieldsToInputType(fields, toUpperCamelCase(pluralize.singular(field)))
         );
       }
@@ -211,7 +211,7 @@ export function buildMutationType(schemas, querySchema) {
     const extractedReturnType = field.replace(/Create|Patch|Remove/, '');
     const type = typeMap[pluralize.singular(extractedReturnType)];
     let args = {};
-    debugger;
+    
     if (field.match(/Create/)) {
       args = {
         data: { type: new GraphQLNonNull(input) },
