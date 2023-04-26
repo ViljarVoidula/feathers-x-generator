@@ -29,10 +29,11 @@ export const rootResolver = {
 `;
 const buildQueryResolver = (resolverName: string, service: string) => {
   const page = resolverName.match(/Page$/);
+
   let innerTemplate = page
-    ? `const { query } = args;\n            const { $limit = 50, $skip = 0 } = query;\n            const data = await context.app.service('${service}').find({ query: { ...query, $limit, $skip }, ...feathers});
+    ? `const { query } = args;\n            const { $limit = 50, $skip = 0 } = query ?? {};\n            const data = await context.app.service('${pluralize(service).toLocaleLowerCase()}').find({ query: { ...query, $limit, $skip }, ...feathers});
   `
-    : `const { id } = args;\n            const data = await context.app.service('${service}').get(id, feathers);
+    : `const { id } = args;\n            const data = await context.app.service('${pluralize(service).toLocaleLowerCase()}').get(id, feathers);
   `;
   return `
         ${resolverName}: async (_parent: any, args: any, context: HookContext & Koa.Context, _info: GraphQLResolveInfo) => {
@@ -167,7 +168,7 @@ class ServiceGenerator {
     );
 
     const queries = schemaResult.queryResolverGeneratorEntries.map((entry) => {
-      const service = `${entry.match(/[a-z].*/)[0]}`;
+      const service = `${entry.match(/^[^A-Z]*/)[0]}`;
       return {
         type: 'modify',
         path: '{{graphQLOutputPath}}/resolvers.ts',
@@ -196,6 +197,7 @@ class ServiceGenerator {
 
     const referencFieldResolvers = Object.entries(schemaResult.typeReferenceEntries).map(([key, value]: any) => {
       const field = value.type === 'array' ? value.path.match(/(?<=\.)[^.\n]*(?=\.|^)/) : value.parent_key;
+
       return {
         type: 'append',
         path: '{{graphQLOutputPath}}/resolvers.ts',
@@ -205,7 +207,7 @@ class ServiceGenerator {
           const { feathers } = context;
           ${value.path.match(/items/) ? `const { ${value.key_field} = [] } = parent;
           const { query } = args;
-          const { $limit = 50, $skip = 0 } = query;
+          const { $limit = 50, $skip = 0 } = query ?? {};
           const data = await context.app.service('${pluralize(value.key).toLowerCase()}').find({ query: {...query, ${value.key_field}: { $in: ${value.key_field} }, $limit, $skip }, ...feathers});
 
           return data;`: `const { ${value.key_field} } = parent;
