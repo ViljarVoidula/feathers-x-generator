@@ -74,7 +74,7 @@
     ajv-formats "^2.1.1"
     json-schema-to-ts "^2.7.2"
 
-"@feathersjs/typebox@5.0.4":
+"@feathersjs/typebox@^5.0.4":
   version "5.0.4"
   resolved "https://registry.yarnpkg.com/@feathersjs/typebox/-/typebox-5.0.4.tgz#3eaa537995928d3d4ac31e4bbf2234269728ba78"
   integrity sha512-2D/xgh+vCE32SSNv0YrlVV+vvXcxVUwAs646v6rcwqv3Sx1eVTAeG3Heaz4gnhKPtLb1mFgB6jYXnVQl0S+EgA==
@@ -1023,12 +1023,7 @@ minimatch@^3.1.1:
   dependencies:
     brace-expansion "^1.1.7"
 
-minimist@^1.2.5, minimist@^1.2.6:
-  version "1.2.8"
-  resolved "https://registry.npmjs.org/minimist/-/minimist-1.2.8.tgz"
-  integrity sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==
-
-minimist@^1.2.8:
+minimist@^1.2.5, minimist@^1.2.6, minimist@^1.2.8:
   version "1.2.8"
   resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.8.tgz#c1a464e7693302e082a075cee0c057741ac4772c"
   integrity sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==

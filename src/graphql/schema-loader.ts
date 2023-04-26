@@ -5,6 +5,7 @@ import { GraphQLSchema, printSchema } from 'graphql';
 import { buildMutationType } from './full-schema-converter';
 import camelcase from 'camelcase';
 import pluralize from 'pluralize';
+import * as ts from "typescript";
 
 const fs = require('fs')
 const path = require('path')
@@ -23,6 +24,14 @@ interface RefKey {
 
 const regex = /\/\/\!code extended_graphql_schema\sstart([\s\S]*?)\/\/\!code extended_graphql_schema\send$/gm;
 
+//@ts-ignore
+function tsCompile(source: string, options: ts.TranspileOptions = null): string {
+  // Default options -- you could also perform a merge, or use the project tsconfig.json
+  if (null === options) {
+    options = { compilerOptions: { module: ts.ModuleKind.CommonJS } };
+  }
+  return ts.transpileModule(source, options).outputText;
+}
 
 function findRefs(obj: any, path: string[] = [], parentType = '', parentKey = '', rootId = ''): RefKey[] {
   let results: RefKey[] = [];
@@ -62,10 +71,14 @@ const importSchemas = async (directory: string): Promise<SchemaImports> => {
 
       if (stats.isDirectory()) {
         await readDirectory(filePath);
-      } else if (file.match(/\.graphql\.ts$/)) {
+      } else if (file.match(/\.graphql\.(ts|js)$/)) {
 
         const contents = await fs.promises.readFile(filePath, 'utf8');
         const matches = contents.match(regex);
+        // FIXME! support both TS and JS files on the load
+        // const test = tsCompile(contents);
+        // // create new vm to import this
+
 
         if (matches) {
           const name = path.basename(path.dirname(filePath)).replace(/^[a-z]/, (_name) => _name.toUpperCase());
