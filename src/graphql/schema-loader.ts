@@ -71,13 +71,12 @@ const importSchemas = async (directory: string): Promise<SchemaImports> => {
 
       if (stats.isDirectory()) {
         await readDirectory(filePath);
-      } else if (file.match(/\.graphql\.(ts|js)$/)) {
+      } else if (file.match(/\.graphql\.ts$/)) {
 
         const contents = await fs.promises.readFile(filePath, 'utf8');
         const matches = contents.match(regex);
-        // FIXME! support both TS and JS files on the load
-        // const test = tsCompile(contents);
-        // // create new vm to import this
+        const test = tsCompile(contents);
+        // create new vm to import this
 
 
         if (matches) {

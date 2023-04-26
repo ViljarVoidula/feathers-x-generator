@@ -22,7 +22,6 @@ const searchForConfig = (dir: string): any | undefined => {
 };
 
 const config = searchForConfig(process.cwd());
-
 const graphqQLGenerator = new GraphqQLGenerator(config);
 
 module.exports = function Plopfile(plop: NodePlopAPI) {

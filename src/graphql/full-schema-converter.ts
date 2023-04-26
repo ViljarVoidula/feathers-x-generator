@@ -91,12 +91,16 @@ export function jsonSchemaTypeToGraphQLType(
 
   return graphQLType;
 }
+
+const inputTypeCache: Map<string, GraphQLInputType> = new Map()
+const visitedTypes: Set<GraphQLObjectType<any, any>> = new Set()
 function fieldsToInputType(
   fields: GraphQLInputFieldConfigMap,
-  name: string
+  name: string,
+  jsonSchema: any,
 ): GraphQLInputObjectType {
   const inputFields: GraphQLInputFieldConfigMap = {};
-  const inputTypeCache: Map<GraphQLInputType, GraphQLInputType> = new Map();
+
 
   function fieldTypeToInputType(fieldType: GraphQLInputType): GraphQLInputType {
     if (fieldType instanceof GraphQLNonNull) {
@@ -105,23 +109,51 @@ function fieldsToInputType(
     } else if (fieldType instanceof GraphQLList) {
       const innerType = fieldTypeToInputType(fieldType.ofType);
       return getCachedType(new GraphQLList(innerType));
+    } else if (fieldType instanceof GraphQLObjectType) {
+      if (visitedTypes.has(fieldType)) {
+        // If object type has already been visited, return the cached input type
+        const cachedType = getCachedType(new GraphQLInputObjectType({
+          name: `${fieldType.name}Input`,
+          fields: inputFields,
+        }));
+
+        return cachedType;
+      } else {
+        // Otherwise, visit the object type and create a new input type based on its fields
+        visitedTypes.add(fieldType);
+        //@ts-ignore
+        const inputType = fieldsToInputType(fieldType.getFields(), `${fieldType.name}Input`, visitedTypes);
+        visitedTypes.delete(fieldType);
+  
+        return getCachedType(inputType) ?? inputType;
+      }
     } else {
       return fieldType;
     }
   }
 
+
   function getCachedType(type: GraphQLInputType): GraphQLInputType {
-    const cachedType = inputTypeCache.get(type);
-    if (cachedType) {
-      return cachedType;
+    const typeName = type.toString();
+    if (inputTypeCache.has(typeName)) {
+      return inputTypeCache.get(typeName)!;
     } else {
-      inputTypeCache.set(type, type);
+      inputTypeCache.set(typeName, type);
       return type;
     }
   }
 
+
   for (const fieldName in fields) {
-    if (fields.hasOwnProperty(fieldName)) {
+    if (Object.prototype.hasOwnProperty.call(fields, fieldName)) {
+      if (jsonSchema && jsonSchema?.properties?.[fieldName] && jsonSchema?.properties?.[fieldName]?.$ref) {
+        // skip $ref fields
+        continue;
+      }
+      if (jsonSchema.properties && jsonSchema.properties[fieldName] && jsonSchema.properties[fieldName]?.items?.$ref) {
+        // skip $ref fields
+        continue;
+      }
       const field = fields[fieldName];
       const fieldType = field.type;
       const inputFieldType = fieldTypeToInputType(fieldType);
@@ -135,6 +167,7 @@ function fieldsToInputType(
     fields: inputFields,
   });
 }
+
 
 function sortSchema(schema: GraphQLSchema) {
   const schemaString = printSchema(schema);
@@ -191,14 +224,15 @@ export function buildMutationType(schemas, querySchema) {
         const typeFields =
           typeMap[pluralize.singular(extractedReturnType)].getFields();
 
-        const fields = /remove|patch/.test(field)
+        const fields = /remove/.test(field)
           ? {
             id: { type: new GraphQLNonNull(GraphQLID) },
           }
           : pick(keys, { ...typeFields });
+
         inputs.push(
           //@ts-ignore
-          fieldsToInputType(fields, toUpperCamelCase(pluralize.singular(field)))
+          fieldsToInputType(fields, toUpperCamelCase(pluralize.singular(field)), schemas[key].extendedSchema)
         );
       }
     }
@@ -211,7 +245,7 @@ export function buildMutationType(schemas, querySchema) {
     const extractedReturnType = field.replace(/Create|Patch|Remove/, '');
     const type = typeMap[pluralize.singular(extractedReturnType)];
     let args = {};
-    
+
     if (field.match(/Create/)) {
       args = {
         data: { type: new GraphQLNonNull(input) },

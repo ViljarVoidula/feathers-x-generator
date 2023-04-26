@@ -21,10 +21,10 @@ export const DEFAULT_ENTRY_POINTS: EntryPointBuilder = (types) => ({
         const pluralTypeName = camelcase(pluralize(typeName));
         return {
           ...prevResult,
-          [pluralTypeName]: {
+          [pluralTypeName + 'Page']: {
             type: new GraphQLNonNull(
               new GraphQLObjectType({
-                name: `${typeName}Page`,
+                name: `${pluralize(typeName)}Page`,
                 fields: {
                   //@ts-expect-error
                   data: { type: new GraphQLNonNull(new GraphQLList(type)) },
@@ -53,8 +53,7 @@ export const DEFAULT_ENTRY_POINTS: EntryPointBuilder = (types) => ({
 
 export const err = (msg: string, propName?: string | null): Error =>
   new Error(
-    `jsonschema2graphql: ${
-      propName ? `Couldn't convert property ${propName}. ` : ''
+    `jsonschema2graphql: ${propName ? `Couldn't convert property ${propName}. ` : ''
     }${msg}`
   );
 
