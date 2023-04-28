@@ -17,6 +17,27 @@ import { HookContext } from '@feathersjs/feathers';
 import { Koa } from '@feathersjs/koa/lib';
 import { GraphQLResolveInfo } from 'graphql';
 
+// formatting __ keys to valid feathers query
+function formatQuery(query: Record<string, any>): Record<string, any> {
+  if (typeof query !== "object" || query === null) {
+      return query;
+  }
+
+  if (Array.isArray(query)) {
+      return query.map(formatQuery);
+  }
+
+  const feathersQuery: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(query)) {
+      const newKey = key.startsWith("__") ? "$" + key.slice(2) : key;
+      feathersQuery[newKey] = formatQuery(value);
+  }
+
+  return feathersQuery;
+}
+
+
 export const rootResolver = {
     Query: {
         //!code graphql_query_resolvers end
@@ -31,7 +52,7 @@ const buildQueryResolver = (resolverName: string, service: string) => {
   const page = resolverName.match(/Page$/);
 
   let innerTemplate = page
-    ? `const { query } = args;\n            const { $limit = 50, $skip = 0 } = query ?? {};\n            const data = await context.app.service('${pluralize(service).toLocaleLowerCase()}').find({ query: { ...query, $limit, $skip }, ...feathers});
+    ? `const query = { ...formatQuery(args?.query ?? {}), $limit: args?.query?.$limit ?? 50, $skip: args?.query?.$skip ?? 0 }\n            const data = await context.app.service('${pluralize(service).toLocaleLowerCase()}').find({ query: { ...formatQuery(query ?? {}) }, ...feathers });
   `
     : `const { id } = args;\n            const data = await context.app.service('${pluralize(service).toLocaleLowerCase()}').get(id, feathers);
   `;
@@ -206,9 +227,8 @@ class ServiceGenerator {
         ${field}: async (parent: any, args: any, context: HookContext & Koa.Context, _info: GraphQLResolveInfo) => {
           const { feathers } = context;
           ${value.path.match(/items/) ? `const { ${value.key_field} = [] } = parent;
-          const { query } = args;
-          const { $limit = 50, $skip = 0 } = query ?? {};
-          const data = await context.app.service('${pluralize(value.key).toLowerCase()}').find({ query: {...query, ${value.key_field}: { $in: ${value.key_field} }, $limit, $skip }, ...feathers});
+          const query = { ...formatQuery(args?.query ?? {}), $limit: args?.query?.$limit ?? 50, $skip: args?.query?.$skip ?? 0 }
+          const data = await context.app.service('${pluralize(value.key).toLowerCase()}').find({ query: {...query, ${value.key_field}: { $in: ${value.key_field} } }, ...feathers});
 
           return data;`: `const { ${value.key_field} } = parent;
           const data = await context.app.service('${pluralize(value.key).toLowerCase()}').get(${value.key_field}, ...feathers);

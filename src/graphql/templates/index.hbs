@@ -1,10 +1,9 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { mergeResolvers, mergeTypeDefs } from '@graphql-tools/merge';
 import { GraphQLJSONObject as JSONObject} from 'graphql-type-json';
-import { rootTypeDef } from './typeDef'
-import { rootResolver } from './resolvers'
-import { authNResolver, jwtAuthNDef } from './authentication'
-
+import { rootTypeDef } from './typeDef';
+import { rootResolver } from './resolvers';
+import { authNResolver, jwtAuthNDef } from './authentication';    
 
 // build graphql schema you expose to your graphql server (graphql-yoga, apollo-server, etc)
 export const schema = makeExecutableSchema({

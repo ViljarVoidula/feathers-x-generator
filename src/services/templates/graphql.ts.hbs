@@ -1,9 +1,14 @@
-import { TSchema } from '@feathersjs/typebox/lib';
+import { Type } from '@feathersjs/typebox/lib';
 import { {{camelCase item}}Schema  } from './{{item}}.schema';
 import { commonDataKeys } from '../../utils/schema-utils';
 
 //!code extended_graphql_schema start
-export const extendedSchema: TSchema = {
+export const extendedSchema = Type.Intersect([
+  {{camelCase item}}Schema.schema,
+], { $id: '{{properCase item}}', additionalProperties: false });
+
+
+TSchema = {
   ...{{camelCase item}}Schema.schema
 };
 export const mutationConfiguration = {
