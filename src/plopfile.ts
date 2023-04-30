@@ -4,6 +4,7 @@ import * as path from 'path';
 import { NodePlopAPI } from 'plop';
 import ServiceGenerator from './services/generator';
 import GraphqQLGenerator from './graphql/generator';
+import AdminInterfaceGenerator from './admin-inteface/generator';
 import pluralize from 'pluralize';
 
 const searchForConfig = (dir: string): any | undefined => {
@@ -21,11 +22,19 @@ const searchForConfig = (dir: string): any | undefined => {
     }
   }
 };
+const cwd = process.cwd();
+const metaJsonPath = path.join(cwd, 'src', 'meta.json');
 
 const config = searchForConfig(process.cwd());
 const graphqQLGenerator = new GraphqQLGenerator(config);
+const adminInterfaceGenerator = new AdminInterfaceGenerator(
+  fs.existsSync(metaJsonPath)
+);
 
 module.exports = function Plopfile(plop: NodePlopAPI) {
+  /*
+    Initialize helpers
+  */
   plop.setHelper('graphQLOutputPath', () => {
     let graphQLOutputPath = path.normalize(
       process.cwd() + '/' + config.graphql_output_path.replace('.', '')
@@ -55,6 +64,37 @@ module.exports = function Plopfile(plop: NodePlopAPI) {
     return pluralize(str);
   });
 
+  /*
+    Initialize custom actions
+  */
+
+  plop.setActionType('copyDirectory', (answers, config) => {
+    const sourceDir = config.sourceDir;
+    const targetDir = config.targetDir;
+
+    const copyRecursiveSync = (src, dest) => {
+      const exists = fs.existsSync(src);
+      const stats = exists && fs.statSync(src);
+      //@ts-expect-error
+      const isDirectory = exists && stats.isDirectory();
+
+      if (isDirectory) {
+        fs.mkdirSync(dest);
+        fs.readdirSync(src).forEach((childItemName) => {
+          copyRecursiveSync(
+            path.join(src, childItemName),
+            path.join(dest, childItemName)
+          );
+        });
+      } else {
+        fs.copyFileSync(src, dest);
+      }
+    };
+
+    copyRecursiveSync(sourceDir, targetDir);
+    return `Directory copied from ${sourceDir} to ${targetDir}!`;
+  });
+
   plop.setGenerator(ServiceGenerator.name, {
     description: ServiceGenerator.description,
     prompts: ServiceGenerator.prompts,
@@ -65,5 +105,11 @@ module.exports = function Plopfile(plop: NodePlopAPI) {
     description: graphqQLGenerator.description,
     prompts: graphqQLGenerator.prompts,
     actions: graphqQLGenerator.actions,
+  });
+
+  plop.setGenerator(adminInterfaceGenerator.name, {
+    description: adminInterfaceGenerator.description,
+    prompts: adminInterfaceGenerator.prompts,
+    actions: adminInterfaceGenerator.actions,
   });
 };

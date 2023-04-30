@@ -1,0 +1,33 @@
+fragment {{properCase resource}}Fields on {{properCase resource}} {
+    _id
+}
+
+query FindCars($query: JSONObject) {
+  {{camelCase resource}}Page(query: $query) {
+    total
+    skip
+    limit
+    data {
+      ...{{properCase resource}}Fields
+    }
+  }
+}
+
+query FindOne{{properCase resource}}($id: String!) {
+  {{camelCase resource}}(id: $id) {
+    ...{{properCase resource}}Fields
+  }
+}
+
+
+mutation Create{{properCase resource}}($data: CreateC{{properCase resource}}!) {
+  create{{properCase resource}}(data: $data) {
+    ...{{properCase resource}}Fields
+  }
+}
+
+mutation Patch{{properCase resource}}($id: ID!, $data: Patch{{properCase resource}}!) {
+  patch{{properCase resource}}(id: $id, data: $data) {
+    ...{{properCase resource}}Fields
+  }
+}

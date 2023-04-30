@@ -1,0 +1,8 @@
+mutation Authenticate($email: String! $password: String!){
+  authenticate(email: $email, password: $password, strategy: "local"){
+    accessToken
+    user {
+      email
+    }
+  }
+}
