@@ -4,6 +4,7 @@ import * as path from 'path';
 import { NodePlopAPI } from 'plop';
 import ServiceGenerator from './services/generator';
 import GraphqQLGenerator from './graphql/generator';
+import pluralize from 'pluralize';
 
 const searchForConfig = (dir: string): any | undefined => {
   const configPath = path.join(dir, '.feathers-x.config.json');
@@ -48,6 +49,10 @@ module.exports = function Plopfile(plop: NodePlopAPI) {
       process.cwd() + '/' + config.app_root_path.replace('.', '')
     );
     return appRootPath;
+  });
+
+  plop.setHelper('pluralize', (str: string) => {
+    return pluralize(str);
   });
 
   plop.setGenerator(ServiceGenerator.name, {

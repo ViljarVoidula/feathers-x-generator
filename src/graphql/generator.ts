@@ -52,7 +52,7 @@ const buildQueryResolver = (resolverName: string, service: string) => {
   const page = resolverName.match(/Page$/);
 
   let innerTemplate = page
-    ? `const query = { ...formatQuery(args?.query ?? {}), $limit: args?.query?.$limit ?? 50, $skip: args?.query?.$skip ?? 0 }\n            const data = await context.app.service('${pluralize(service).toLocaleLowerCase()}').find({ query: { ...formatQuery(query ?? {}) }, ...feathers });
+    ? ` const { __limit: $limit = 50, __skip: $skip = 0} = args?.query ?? {}\n            const query = { ...formatQuery(args?.query ?? {}), $limit, $skip }\n            const data = await context.app.service('${pluralize(service).toLocaleLowerCase()}').find({ query: { ...formatQuery(query ?? {}) }, ...feathers });
   `
     : `const { id } = args;\n            const data = await context.app.service('${pluralize(service).toLocaleLowerCase()}').get(id, feathers);
   `;
@@ -231,7 +231,7 @@ class ServiceGenerator {
           const data = await context.app.service('${pluralize(value.key).toLowerCase()}').find({ query: {...query, ${value.key_field}: { $in: ${value.key_field} } }, ...feathers});
 
           return data;`: `const { ${value.key_field} } = parent;
-          const data = await context.app.service('${pluralize(value.key).toLowerCase()}').get(${value.key_field}, ...feathers);
+          const data = await context.app.service('${pluralize(value.key).toLowerCase()}').get(${value.key_field}, feathers);
 
           return data;
           `}

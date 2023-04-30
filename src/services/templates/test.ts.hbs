@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-describe('"./src/services/{{item}}s/{{item}}.ts"', () => {
+describe('"./src/services/{{pluralize item}}/{{item}}.ts"', () => {
   it('registered the service', async function () {
     const service = this.app.service('{{path}}');
 

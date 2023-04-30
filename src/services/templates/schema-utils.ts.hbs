@@ -1,3 +1,4 @@
+import { HookContext } from '@feathersjs/feathers/lib';
 import { TSchema, Type } from '@feathersjs/typebox';
 
 export const commonSchemaProperties = {
@@ -6,6 +7,30 @@ export const commonSchemaProperties = {
   updated_at: Type.String(),
   deleted_at: Type.Optional(Type.String())
 };
+
+export const commonSchemaPropertiesResolvers = {
+  created_at: (_value: any, _item: any, context: HookContext) =>{
+    let result;
+    if(context.method === 'create'){
+      result = new Date().toISOString();
+    }
+    return result
+  },
+  updated_at: (_value: any, _item: any, context: HookContext) =>{
+    let result;
+    if(['create','patch'].includes(context.method)){
+      result =  new Date().toISOString();
+    }
+    return result;
+  },
+  deleted_at: (_value: any, _item: any, context: HookContext) =>{
+    let result;
+    if(context.method === 'remove'){
+      result = new Date().toISOString();
+    }
+    return result
+  }
+}
 
 export const Nullable = <T extends TSchema>(schema: T) => Type.Union([schema, Type.Null()]);
 

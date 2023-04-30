@@ -1,5 +1,5 @@
 import { {{database}}Service } from '@feathersjs/{{lowerCase database}}';
-import type { MongoDBAdapterOptions } from '@feathersjs/{{lowerCase database}}';
+import type { {{database}}AdapterOptions } from '@feathersjs/{{lowerCase database}}';
 
 import { Application } from '@feathersjs/feathers';
 import type { {{properCase item}}, {{properCase item}}Data } from './{{item}}.schema';
@@ -9,7 +9,7 @@ export const getOptions = (app: Application): {{database}}AdapterOptions => {
   return {
     paginate: app.get('paginate'),
     //!code define_model start
-    Model: app.get('mongodbClient').then((db) => db.collection('{{item}}s'))
+
     //!code define_model end
   };
 };
