@@ -1,5 +1,5 @@
 import { AuthBindings } from "@refinedev/core";
-import client, { instance } from "data-providers/graphql/client";
+import client, { instance } from "dataproviders/graphql/client";
 import { AuthenticateDocument } from './authentication/authentication.generated';
 export const TOKEN_KEY = "refine-auth";
 

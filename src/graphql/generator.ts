@@ -91,6 +91,12 @@ class ServiceGenerator {
     return [
       {
         type: 'confirm',
+        name: 'initialize',
+        message: 'Do you want to initialize the GraphQL middleware? (yes/no)',
+        default: false
+      },
+      {
+        type: 'confirm',
         prefix: `
         _____________________________________________________________
        / To run the Graphql generator, make sure you have the         \\
@@ -113,6 +119,51 @@ class ServiceGenerator {
   }
 
   actions(data: any) {
+
+    if(data.initialize) {
+      return [
+        {
+          type: 'append',
+          path: '{{appRootPath}}/app.ts',
+          pattern: /import\s*{\s*services\s*}\s*from\s*['"]\.\/services\/index['"]\s*/,
+          template: `//!code graphql_schema_imports start\nimport { createYoga } from 'graphql-yoga';\nimport { EnvelopArmor } from '@escape.tech/graphql-armor';\nimport { schema } from './graphql';\n//!code graphql_schema_imports end\n`      
+        },{
+          type: 'append',
+          path: '{{appRootPath}}/app.ts',
+          pattern: /app\.use\(parseAuthentication\(\)\)/,
+          template: `//!code: yoga start
+  const armor = new EnvelopArmor();
+  const protection = armor.protect();
+  const yoga = createYoga<Koa.ParameterizedContext>({
+  graphiql: true,
+  plugins: [...protection.plugins],
+  maskedErrors: false,
+  schema,
+});
+          
+app.use(async (ctx, next) => {
+  if (${/\/graphql.*/.toString()}.test(ctx.req.url as string)) {
+  // Second parameter adds Koa's context into GraphQL Context
+  const response = await yoga.handleNodeRequest(ctx.req, ctx);
+          
+  // Set status code
+  ctx.status = response.status;
+          
+  // Set headers
+  response.headers.forEach((value, key) => {
+    ctx.append(key, value);
+  });
+          
+  // Converts ReadableStream to a NodeJS Stream
+  ctx.body = response.body;
+  } else {
+    await next();
+  }
+  });
+//!code: yoga end\n`
+        }
+      ]
+    }
 
     if (!data.generateResolvers) return []
     function buildServiceCall(method: string, service: string) {
@@ -212,7 +263,6 @@ class ServiceGenerator {
         path: '{{graphQLOutputPath}}/resolvers.ts',
         pattern: `//!code graphql_type_resolvers end`,
         template: `    ${entry}: {\n        //!code graphql_${entry}_resolvers end\n    },\n`
-
       }
     })
 

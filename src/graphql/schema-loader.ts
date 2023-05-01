@@ -98,8 +98,8 @@ const importSchemas = async (directory: string): Promise<SchemaImports> => {
   return schemaImports;
 };
 
-export async function getFullSchema(servicesPath = path.join(__dirname, '../../assets')): Promise<any> {
-  return await importSchemas(servicesPath).then((schemas) => {
+export async function getFullSchema(servicesOutputPath = path.join(__dirname, '../../assets')): Promise<any> {
+  return await importSchemas(servicesOutputPath).then((schemas) => {
     const querySchema: GraphQLSchema = convert({ jsonSchema: Object.keys(schemas).map((key) => schemas[key].extendedSchema) });
     const mutationResolverGeneratorEntries = Object.keys(schemas).map((key) => Object.keys(schemas[key].mutationConfiguration).map(method => `${method}${pluralize.singular(key)}`)).flat(2);
     const queryResolverGeneratorEntries = Object.keys(schemas).map((key) => [`${pluralize.singular(camelcase(key))}`, `${camelcase(key)}Page`]).flat(2);

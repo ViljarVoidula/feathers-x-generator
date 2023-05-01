@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.plop.json",
     "plop": "ts-node --project=./tsconfig.plop.json node_modules/.bin/plop --plopfile=src/plopfile.ts",
-    "run:plop": "ts-node --project=./tsconfig.plop.json  ./src/main.ts"
+    "plop:admin": "ts-node --project=./tsconfig.plop.json node_modules/.bin/plop --plopfile=src/admin.plopfile.ts"
   },
   "dependencies": {
     "ajv": "8.12.0",

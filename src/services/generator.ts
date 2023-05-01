@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import pluralize from 'pluralize';
 const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
 
 class ServiceGenerator {
@@ -21,7 +22,7 @@ class ServiceGenerator {
         name: 'path',
         message: 'What path should the service be registered on?',
         default: (answers: any) => {
-          return answers.item + 's';
+          return pluralize(answers.item);
         },
       },
       {
@@ -60,19 +61,19 @@ class ServiceGenerator {
     const actions = [
       {
         type: 'add',
-        path: '{{servicesPath}}/{{pluralize item}}/{{item}}.schema.ts',
+        path: '{{servicesOutputPath}}/{{pluralize item}}/{{item}}.schema.ts',
         skipIfExists: true,
         templateFile: 'services/templates/schema.ts.hbs',
       },
       {
         type: 'add',
-        path: '{{servicesPath}}/{{pluralize item}}/{{item}}.class.ts',
+        path: '{{servicesOutputPath}}/{{pluralize item}}/{{item}}.class.ts',
         skipIfExists: true,
         templateFile: 'services/templates/class.ts.hbs',
       },
       {
         type: 'add',
-        path: '{{servicesPath}}/{{pluralize item}}/{{item}}.ts',
+        path: '{{servicesOutputPath}}/{{pluralize item}}/{{item}}.ts',
         skipIfExists: true,
         templateFile: 'services/templates/service.ts.hbs',
       },
@@ -96,7 +97,7 @@ class ServiceGenerator {
       },
       {
         type: 'add',
-        path: '{{servicesPath}}/index.ts',
+        path: '{{servicesOutputPath}}/index.ts',
         skipIfExists: true,
         templateFile: 'services/templates/index.ts.hbs',
       },
@@ -109,7 +110,7 @@ class ServiceGenerator {
     if (data.commonProperties === 'Yes') {
       actions.push({
         type: 'add',
-        path: '{{servicesPath}}/../utils/schema-utils.ts',
+        path: '{{servicesOutputPath}}/../utils/schema-utils.ts',
         //@ts-ignore
         skipIfExists: true,
         templateFile: 'services/templates/schema-utils.ts.hbs',
@@ -117,7 +118,7 @@ class ServiceGenerator {
 
       actions.push({
         type: 'append',
-        path: '{{servicesPath}}/{{pluralize item}}/{{item}}.schema.ts',
+        path: '{{servicesOutputPath}}/{{pluralize item}}/{{item}}.schema.ts',
         skipIfExists: true,
         //@ts-ignore
         pattern: /\/\/!code:\s*default_imports\s+end/,
@@ -126,7 +127,7 @@ class ServiceGenerator {
       // if so, add the import to the file
       actions.push({
         type: 'modify',
-        path: '{{servicesPath}}/{{pluralize item}}/{{item}}.schema.ts',
+        path: '{{servicesOutputPath}}/{{pluralize item}}/{{item}}.schema.ts',
         skipIfExists: true,
         //@ts-ignore
         pattern:
@@ -136,7 +137,7 @@ class ServiceGenerator {
 
       actions.push({
         type: 'append',
-        path: '{{servicesPath}}/{{pluralize item}}/{{item}}.schema.ts',
+        path: '{{servicesOutputPath}}/{{pluralize item}}/{{item}}.schema.ts',
         skipIfExists: true,
         //@ts-ignore
         pattern: /\/\/!code:\s+picking_keys/,
@@ -145,27 +146,25 @@ class ServiceGenerator {
     } else {
       actions.push({
         type: 'append',
-        path: '{{servicesPath}}/{{pluralize item}}/{{item}}.schema.ts',
+        path: '{{servicesOutputPath}}/{{pluralize item}}/{{item}}.schema.ts',
         //@ts-ignore
         pattern: /\/\/!code:\s+picking_keys/,
         template: `            [],`,
       });
     }
 
-  
-
     if (data.graphql) {
       actions.push({
         type: 'add',
         skipIfExists: true,
-        path: '{{servicesPath}}/{{pluralize item}}/{{item}}.graphql.ts',
+        path: '{{servicesOutputPath}}/{{pluralize item}}/{{item}}.graphql.ts',
         templateFile: 'services/templates/graphql.ts.hbs',
       });
     }
     if (data.database === 'MongoDB') {
       actions.push({
         type: 'modify',
-        path: '{{servicesPath}}/{{pluralize item}}/{{item}}.class.ts',
+        path: '{{servicesOutputPath}}/{{pluralize item}}/{{item}}.class.ts',
         //@ts-ignore
         pattern:
           /\/\/!code define_model start\n([\s\S]*?)\/\/!code define_model end/,
@@ -176,24 +175,36 @@ class ServiceGenerator {
     if (data.database === 'Knex') {
       actions.push({
         type: 'modify',
-        path: '{{servicesPath}}/{{pluralize item}}/{{item}}.class.ts',
+        path: '{{servicesOutputPath}}/{{pluralize item}}/{{item}}.class.ts',
         //@ts-ignore
         pattern:
           /\/\/!code define_model start\n([\s\S]*?)\/\/!code define_model end/,
-        template: `Model: app.get('postgresClient'),`,
+        template: `Model: app.get('postgresqlClient'),\n    name: '${pluralize(
+          data.item
+        )}'`,
       });
     }
 
     actions.push({
       type: 'append',
-      path: '{{servicesPath}}/index.ts',
+      path: '{{servicesOutputPath}}/../utils/schema-utils.ts',
       //@ts-ignore
-      pattern: /import.*service.*;/g,
+      pattern: /\/\/!code:\s*id_field/g,
+      template: `  ${
+        data.database === 'MongoDB' ? '_id' : 'id'
+      }: Type.String(),\n`,
+    });
+
+    actions.push({
+      type: 'append',
+      path: '{{servicesOutputPath}}/index.ts',
+      //@ts-ignore
+      pattern: /\/\/!code:\s*generated_services_imports/g,
       template: `import { {{pluralize item}} } from './{{pluralize item}}/{{item}}';\n`,
     });
     actions.push({
       type: 'append',
-      path: '{{servicesPath}}/index.ts',
+      path: '{{servicesOutputPath}}/index.ts',
       //@ts-ignore
       pattern: /\/\/!code:\s+generated_services start/g,
       template: `  app.configure({{pluralize item}});`,

@@ -26,7 +26,7 @@ import { Header } from "./components/header";
 import { ColorModeContextProvider } from "./contexts/color-mode";
 
 //!code graphql provider
-import { dataProvider as graphQlProvider } from './data-providers/graphql/dataprovider';
+import { dataProvider as graphQlProvider } from './dataproviders/graphql/dataprovider';
 //!code graphql provider end
 //!code generated resources imports
 
@@ -85,7 +85,7 @@ function App() {
                   index
                   element={<NavigateToResource resource="users" />}
                 />
-                {/*!code for generated resources*/}
+                {/*!code for generated resources start*/}
       
                 <Route path="*" element={<ErrorComponent />} />
               </Route>

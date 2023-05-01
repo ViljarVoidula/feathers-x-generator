@@ -2,7 +2,7 @@ import { HookContext } from '@feathersjs/feathers/lib';
 import { TSchema, Type } from '@feathersjs/typebox';
 
 export const commonSchemaProperties = {
-  _id: Type.String(),
+  //!code: id_field
   created_at: Type.String(),
   updated_at: Type.String(),
   deleted_at: Type.Optional(Type.String())

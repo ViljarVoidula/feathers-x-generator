@@ -125,15 +125,6 @@
       "show": "Eintrag zeigen"
     }
   },
-  "cars": {
-    "cars": "Autos",
-    "fields": {
-      "id": "Id",
-      "brand": "Marke",
-      "color": "Farbe",
-      "createdAt": "Erstellt am"
-    }
-  },
   "table": {
     "actions": "Aktionen"
   }

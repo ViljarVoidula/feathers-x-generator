@@ -20,7 +20,7 @@ test('generateFilters handles crud filters', () => {
     },
     ]
     
-    const result = getFilters(filters);
+    const result = getFilters(filters as any);
     assert.deepEqual(result, { name: { __eq: 'John' }, age: { __lt: 30 }, height: { __gte: 50 } }, 'generateFilters handles crud filters')
 })   
 
@@ -63,7 +63,7 @@ test('generateFilters handles logical filters', () => {
         }
     ]
 
-    const result = getFilters(filters);
+    const result = getFilters(filters as any);
     assert.deepEqual(result, {__or:{__and:{name:{__eq:"JR.Doe"},age:{__eq:1}}}})
 
 })  
@@ -76,7 +76,7 @@ test('data provider sorting is applied correctly', () => {
         }
     ]
 
-    const result = getSorting(sorters);
+    const result = getSorting(sorters as any);
 
     assert.deepEqual(result, { name: 1 })
 

@@ -5,7 +5,6 @@ import client from "./client";
 
 
 const resourceImportMap = {
-    cars: await import("../../resources/cars/cars.generated"),
     //!code resource_import_map
 }
 

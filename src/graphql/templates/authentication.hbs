@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { HookContext } from '@feathersjs/feathers';
 import { Koa } from '@feathersjs/koa/lib';
 import { GraphQLResolveInfo } from 'graphql';
@@ -34,7 +35,7 @@ export const jwtAuthNDef = `
 
 export const authNResolver = {
     Mutation: {
-        authenticate: async (_parent: any, args: any, context: HookContext & Koa.Context, info: GraphQLResolveInfo) => {
+        authenticate: async (_parent: any, args: any, context: HookContext & Koa.Context, _info: GraphQLResolveInfo) => {
             const { feathers } = context;
             const { email, password, strategy } = args;          
             const data = await context.app.service('authentication').create({ email, password, strategy, ...feathers});
