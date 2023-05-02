@@ -6,50 +6,56 @@ import {
   GraphQLString,
   GraphQLType,
   GraphQLNonNull,
-  printSchema
 } from 'graphql';
 import pluralize from 'pluralize';
 
 import { EntryPointBuilder } from '../../../@types';
-import { FeathersQueryScalar } from './feathersQuery.scalar';
 import { GraphQLJSONObject } from 'graphql-type-json';
 
 /** This generates the default `Query` block of the schema. */
 export const DEFAULT_ENTRY_POINTS: EntryPointBuilder = (types) => ({
   query: new GraphQLObjectType({
     name: 'Query',
-    fields: Object.entries(types).reduce((prevResult: any, [typeName, type]: [string, GraphQLType]) => {
-      const pluralTypeName = camelcase(pluralize(typeName));
-      return {
-        ...prevResult,
-        [pluralTypeName]: {
-          type: new GraphQLNonNull(new GraphQLObjectType({
-            name: `${typeName}Page`,
-            fields: {
-              //@ts-expect-error
-              data: { type: new GraphQLNonNull(new GraphQLList(type)) },
-              total: { type: new GraphQLNonNull(GraphQLInt) },
-              limit: { type: new GraphQLNonNull(GraphQLInt) },
-              skip: { type: new GraphQLNonNull(GraphQLInt) },
-            }
-          })),
-          args: {
-            query: { type: GraphQLJSONObject }
-          }
-        },
-        [camelcase(typeName)]: {
-          type,
-          args: {
-            id: { type: GraphQLString }
-          }
-        }
-      };
-    }, {})
-  })
+    fields: Object.entries(types).reduce(
+      (prevResult: any, [typeName, type]: [string, GraphQLType]) => {
+        const pluralTypeName = camelcase(pluralize(typeName));
+        return {
+          ...prevResult,
+          [pluralTypeName + 'Page']: {
+            type: new GraphQLNonNull(
+              new GraphQLObjectType({
+                name: `${pluralize(typeName)}Page`,
+                fields: {
+                  //@ts-expect-error
+                  data: { type: new GraphQLNonNull(new GraphQLList(type)) },
+                  total: { type: new GraphQLNonNull(GraphQLInt) },
+                  limit: { type: new GraphQLNonNull(GraphQLInt) },
+                  skip: { type: new GraphQLNonNull(GraphQLInt) },
+                },
+              })
+            ),
+            args: {
+              query: { type: GraphQLJSONObject },
+            },
+          },
+          [camelcase(typeName)]: {
+            type,
+            args: {
+              id: { type: GraphQLString },
+            },
+          },
+        };
+      },
+      {}
+    ),
+  }),
 });
 
 export const err = (msg: string, propName?: string | null): Error =>
-  new Error(`jsonschema2graphql: ${propName ? `Couldn't convert property ${propName}. ` : ''}${msg}`);
+  new Error(
+    `jsonschema2graphql: ${propName ? `Couldn't convert property ${propName}. ` : ''
+    }${msg}`
+  );
 
 type Func<T, U> = (arg: T) => U;
 
@@ -86,7 +92,7 @@ export function keyBy<T>(array: T[], keyFunc: KeyFunc<T>): Record<string, T> {
     const key = keyFunc(value);
     return {
       ...result,
-      [key]: value
+      [key]: value,
     };
   }, {});
 }
@@ -105,7 +111,10 @@ export function toUpperCamelCase(input: string): string {
 
 type MapFunc<T, U> = (value: T, key: string) => U;
 
-export function mapValues<T, U>(obj: Record<string, T>, fn: MapFunc<T, U>): Record<string, U> {
+export function mapValues<T, U>(
+  obj: Record<string, T>,
+  fn: MapFunc<T, U>
+): Record<string, U> {
   const result: Record<string, U> = {};
 
   for (const key in obj) {
@@ -120,7 +129,10 @@ export function mapValues<T, U>(obj: Record<string, T>, fn: MapFunc<T, U>): Reco
   return result;
 }
 
-export function pick<T extends object, K extends keyof T>(keys: K[], obj: T): Pick<T, K> {
+export function pick<T extends object, K extends keyof T>(
+  keys: K[],
+  obj: T
+): Pick<T, K> {
   const result = {} as Pick<T, K>;
   for (const key of keys) {
     if (obj?.hasOwnProperty(key)) {

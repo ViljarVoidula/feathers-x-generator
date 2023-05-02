@@ -9,7 +9,7 @@ import {
   GraphQLObjectType,
   GraphQLString,
   GraphQLType,
-  GraphQLUnionType
+  GraphQLUnionType,
 } from 'graphql';
 import { JSONSchema7 } from 'json-schema';
 import { GraphQLTypeMap } from '../../../@types';
@@ -22,7 +22,7 @@ const BASIC_TYPE_MAPPING = {
   string: GraphQLString,
   integer: GraphQLInt,
   number: GraphQLFloat,
-  boolean: GraphQLBoolean
+  boolean: GraphQLBoolean,
 };
 
 export function schemaReducer(knownTypes: GraphQLTypeMap, schema: JSONSchema7) {
@@ -38,14 +38,24 @@ export function schemaReducer(knownTypes: GraphQLTypeMap, schema: JSONSchema7) {
   const { definitions } = schema;
   for (const definedTypeName in definitions) {
     const definedSchema = definitions[definedTypeName] as JSONSchema7;
-    knownTypes[definedTypeName] = buildType(definedTypeName, definedSchema, knownTypes);
+    knownTypes[definedTypeName] = buildType(
+      definedTypeName,
+      definedSchema,
+      knownTypes,
+      schema
+    );
   }
 
-  knownTypes[typeName] = buildType(typeName, schema, knownTypes);
+  knownTypes[typeName] = buildType(typeName, schema, knownTypes, schema);
   return knownTypes;
 }
 
-function buildType(propName: string, schema: JSONSchema7, knownTypes: GraphQLTypeMap): GraphQLType {
+function buildType(
+  propName: string,
+  schema: JSONSchema7,
+  knownTypes: GraphQLTypeMap,
+  rootSchema?: JSONSchema7
+): GraphQLType {
   const name = toUpperCamelCase(propName);
 
   // oneOf?
@@ -56,7 +66,11 @@ function buildType(propName: string, schema: JSONSchema7, knownTypes: GraphQLTyp
       const caseSchema = cases[caseName];
       const qualifiedName = `${name}_${caseName}`;
       const typeSchema = (caseSchema.then || caseSchema) as JSONSchema7;
-      return buildType(qualifiedName, typeSchema, knownTypes) as GraphQLObjectType;
+      return buildType(
+        qualifiedName,
+        typeSchema,
+        knownTypes
+      ) as GraphQLObjectType;
     });
     const description = buildDescription(schema);
     return new GraphQLUnionType({ name, description, types });
@@ -71,31 +85,50 @@ function buildType(propName: string, schema: JSONSchema7, knownTypes: GraphQLTyp
     }
     const fields = () =>
       !isEmpty(schema.properties)
-        //@ts-ignore
-        ? mapValues(schema?.properties ?? {}, (prop: JSONSchema7, fieldName: string) => {
+        ? mapValues(
+          //@ts-ignore
+          schema?.properties ?? {},
+          (prop: JSONSchema7, fieldName: string) => {
             const qualifiedFieldName = `${name}.${fieldName}`;
-            const type = buildType(qualifiedFieldName, prop, knownTypes) as GraphQLObjectType;
+            const type = buildType(
+              qualifiedFieldName,
+              prop,
+              knownTypes
+            ) as GraphQLObjectType;
             const isRequired = schema?.required?.includes(fieldName);
+
             return {
               type: isRequired ? new GraphQLNonNull(type) : type,
-              description: buildDescription(prop)
+              //@ts-expect-error
+              ...(prop.items?.$ref ? {
+                args: {
+                  query: { type: GraphQLJSONObject },
+                }
+              } : {}),
+              description: buildDescription(prop),
             };
-          })
+          }
+        )
         : // GraphQL doesn't allow types with no fields, so put a placeholder
-          { _empty: { type: GraphQLString } };
+        { _empty: { type: GraphQLString } };
 
     return new GraphQLObjectType({ name, description, fields });
   }
 
   // array?
   else if (schema.type === 'array') {
-    const elementType = buildType(name, schema.items as JSONSchema7, knownTypes);
+    const elementType = buildType(
+      name,
+      schema.items as JSONSchema7,
+      knownTypes
+    );
     return new GraphQLList(new GraphQLNonNull(elementType));
   }
 
   // enum?
   else if (schema.enum) {
-    if (schema.type !== 'string') throw err(`Only string enums are supported.`, name);
+    if (schema.type !== 'string')
+      throw err(`Only string enums are supported.`, name);
     const description = buildDescription(schema);
     //@ts-ignore
     const graphqlToJsonMap = keyBy(schema.enum, graphqlSafeEnumKey);

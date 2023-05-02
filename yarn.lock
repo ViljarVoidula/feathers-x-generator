@@ -35,7 +35,7 @@
   resolved "https://registry.yarnpkg.com/@feathersjs/errors/-/errors-5.0.4.tgz#bf66705e2938b2f306ee061214e4650bce16b664"
   integrity sha512-ZR2At1ExDVCgFrct85DL4lv9B14VQj1nB3DI+DS0g7JTkAZGr2bTt9tWnmPXHWpss++CuQEOwjGSuqqCRuF89g==
 
-"@feathersjs/feathers@^5.0.4":
+"@feathersjs/feathers@5.0.4", "@feathersjs/feathers@^5.0.4":
   version "5.0.4"
   resolved "https://registry.yarnpkg.com/@feathersjs/feathers/-/feathers-5.0.4.tgz#ad320102d45b4d353f65ed7fe8684edc63b17e11"
   integrity sha512-hFMHkJzcG77ENR7HAlDC9ZRPqmpJGFFtQly9aDiF7eQRUhml35oQ1KhkHazROxzu5fdiXDSnb0ll5te3gjGUvA==
@@ -48,6 +48,16 @@
   version "0.8.1"
   resolved "https://registry.yarnpkg.com/@feathersjs/hooks/-/hooks-0.8.1.tgz#de7e8e9632d9bd9027eaffc7f5292fc577bc769f"
   integrity sha512-q/OGjm2BEhT9cHYYcMZR4YKX4lHyufBJmi5Dz+XRM5YqUuEg9MYtR45CWgDiC1klrd2srNSsdmGNVU1otL4+0Q==
+
+"@feathersjs/mongodb@5.0.4":
+  version "5.0.4"
+  resolved "https://registry.yarnpkg.com/@feathersjs/mongodb/-/mongodb-5.0.4.tgz#593ef07efce415f627b5e4e73a67867e56e4443b"
+  integrity sha512-BxYkbNiyv5gc0Tu51bFUtErqKmzjYgaR9pMTzzkF7RHO/sUbTf4IxhuxYuez41mhvtmUF549/LtId0GEH7UZPQ==
+  dependencies:
+    "@feathersjs/adapter-commons" "^5.0.4"
+    "@feathersjs/commons" "^5.0.4"
+    "@feathersjs/errors" "^5.0.4"
+    "@feathersjs/feathers" "^5.0.4"
 
 "@feathersjs/schema@^5.0.4":
   version "5.0.4"
@@ -64,7 +74,7 @@
     ajv-formats "^2.1.1"
     json-schema-to-ts "^2.7.2"
 
-"@feathersjs/typebox@5.0.4":
+"@feathersjs/typebox@^5.0.4":
   version "5.0.4"
   resolved "https://registry.yarnpkg.com/@feathersjs/typebox/-/typebox-5.0.4.tgz#3eaa537995928d3d4ac31e4bbf2234269728ba78"
   integrity sha512-2D/xgh+vCE32SSNv0YrlVV+vvXcxVUwAs646v6rcwqv3Sx1eVTAeG3Heaz4gnhKPtLb1mFgB6jYXnVQl0S+EgA==
@@ -1013,9 +1023,9 @@ minimatch@^3.1.1:
   dependencies:
     brace-expansion "^1.1.7"
 
-minimist@^1.2.5, minimist@^1.2.6:
+minimist@^1.2.5, minimist@^1.2.6, minimist@^1.2.8:
   version "1.2.8"
-  resolved "https://registry.npmjs.org/minimist/-/minimist-1.2.8.tgz"
+  resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.8.tgz#c1a464e7693302e082a075cee0c057741ac4772c"
   integrity sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==
 
 mkdirp@^1.0.4:

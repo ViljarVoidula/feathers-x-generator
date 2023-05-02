@@ -44,18 +44,20 @@ class ServiceSchema {
     get resolver(){
        return resolve<typeof this.schema, HookContext>({
         // if you have any custom resolver, write it here, for example populate or calculate a field on typebox schema
+        ...commonSchemaPropertiesResolvers
        })
     }
 
     get validateInput() {
+        const schemasMap = {
+            create: this.dataSchema,
+            patch:  this.patchSchema
+        };
+
         return async (context: HookContext) => {
             const { data } = context;
             if(!['create', 'patch'].includes(context.method)) throw new Error('Invalid method for validator');  
             
-            const schemasMap = {
-                create: this.dataSchema,
-                patch:  this.patchSchema
-            };
             const validator = dataValidator.compile(schemasMap[context.method as 'create' | 'patch']);
             const valid = validator(data);
     
