@@ -29,7 +29,7 @@ export const jwtAuthNDef = `
     }
 
     type Mutation {
-        authenticate(email: String!, password: String!, strategy: String!): AuthNResult!
+        authenticate(email: String!, password: String!, strategy: String = "local"): AuthNResult!
     }
 `
 

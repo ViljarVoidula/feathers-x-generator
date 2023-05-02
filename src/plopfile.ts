@@ -75,7 +75,7 @@ module.exports = function Plopfile(plop: NodePlopAPI) {
       }
       const exists = fs.existsSync(src);
       const stats = exists && fs.statSync(src);
-      //@ts-expect-error
+      //@ts-ignore
       const isDirectory = exists && stats.isDirectory();
 
       if (isDirectory) {

@@ -20,7 +20,6 @@
     "noImplicitAny": false,
     "noImplicitReturns": true,
     "noImplicitThis": false,
-    "sourceMap": true
   },
   "allowSyntheticDefaultImports": true,
   "include": ["src"],
